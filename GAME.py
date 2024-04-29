@@ -1,7 +1,8 @@
+import pygame
 from pygame.math import Vector2
 import random
 import sys
-import pygame
+import os
 
 pygame.init()
 
@@ -12,7 +13,6 @@ DARK_BROWN = (64, 55, 37)
 cell_size = 20
 number_of_cells = 30
 
-# Load the Orbitron font
 pygame.font.init()
 orbitron_font = pygame.font.Font("Orbitron-VariableFont_wght.ttf", 15)
 
@@ -56,7 +56,7 @@ class Cobra:
             segment_rect = pygame.Rect(segment.x * cell_size, segment.y * cell_size, cell_size, cell_size)
 
             if i == 0:
-                pygame.draw.rect(screen, DARK_BROWN,segment_rect, 0, 5)
+                pygame.draw.rect(screen, DARK_BROWN, segment_rect, 0, 5)
             else:
                 pygame.draw.rect(screen, DARK_BROWN, segment_rect, 5, 5)
 
@@ -85,9 +85,8 @@ class Cobra:
         if self.snake_speed >= 45:
             self.snake_speed -= 2
         else:
-            self.snake_speed == 45   
+            self.snake_speed == 45
         pygame.time.set_timer(COBRA_UPDATE, self.snake_speed)
-    
 
 class Game: 
     def __init__(self):
@@ -98,12 +97,15 @@ class Game:
         self.game_paused = False
 
         self.snake_speed = 200 
+        self.highscore = self.load_highscore()
 
         self.game_over_font = pygame.font.Font("Orbitron-VariableFont_wght.ttf", 40)
         self.restart_font = pygame.font.Font("Orbitron-VariableFont_wght.ttf", 20)
         self.start_font = pygame.font.Font("Orbitron-VariableFont_wght.ttf", 20)
         self.pause_font = pygame.font.Font("Orbitron-VariableFont_wght.ttf", 40)
         self.pause_font1 = pygame.font.Font("Orbitron-VariableFont_wght.ttf", 20)
+        self.highscore_font = pygame.font.Font("Orbitron-VariableFont_wght.ttf", 20)
+        self.score_font = pygame.font.Font("Orbitron-VariableFont_wght.ttf", 20)
 
     def restart_game(self):
         self.cobra = Cobra()
@@ -139,6 +141,18 @@ class Game:
             game_over_rect = game_over_text.get_rect(center=(cell_size * 15, cell_size * 10))
             screen.blit(game_over_text, game_over_rect)
 
+            # Verifica se a pontuação é maior que o recorde
+            if self.cobra.score > self.highscore:
+                self.highscore = self.cobra.score
+                new_highscore_text = self.highscore_font.render("Novo Recorde!", True, DARK_BROWN)
+                new_highscore_rect = new_highscore_text.get_rect(center=(cell_size * 15, cell_size * 13))
+                screen.blit(new_highscore_text, new_highscore_rect)
+                self.save_highscore()
+                
+            score_text = self.score_font.render("Pontuação: {}".format(self.cobra.score), True, DARK_BROWN)
+            score_rect = score_text.get_rect(center=(cell_size * 15, cell_size * 20))
+            screen.blit(score_text, score_rect)
+
             restart_text = self.restart_font.render("Pressione a tecla de Espaço para reiniciar", True, DARK_BROWN)
             restart_rect = restart_text.get_rect(center=(cell_size * 15, cell_size * 13))
 
@@ -151,9 +165,9 @@ class Game:
             pause_text = self.pause_font.render("JOGO PAUSADO", True, DARK_BROWN)
             pause_rect = pause_text.get_rect(center=(cell_size * 14, cell_size * 3))
             pause_text1 = self.pause_font1.render("Aperte (P) para continuar", True, DARK_BROWN)
-            pause_rect1 = pause_text.get_rect(center=(cell_size * 10, cell_size * 14))
+            pause_rect1 = pause_text1.get_rect(center=(cell_size * 10, cell_size * 14))
             pause_text2 = self.pause_font1.render("Aperte (R) para reiniciar", True, DARK_BROWN)
-            pause_rect2 = pause_text.get_rect(center=(cell_size * 10, cell_size * 19))
+            pause_rect2 = pause_text2.get_rect(center=(cell_size * 10, cell_size * 19))
             screen.blit(pause_text, pause_rect)
             screen.blit(pause_text1, pause_rect1)
             screen.blit(pause_text2, pause_rect2)
@@ -163,6 +177,12 @@ class Game:
             
             scaled_reset_surface = pygame.transform.scale(reset_surface, (cell_size * 4, cell_size * 4))
             screen.blit(scaled_reset_surface, (290, 320))
+
+        score_text = orbitron_font.render("Pts.: {}".format(self.cobra.score), True, DARK_BROWN)
+        screen.blit(score_text, (10, 5))
+
+        highscore_text = orbitron_font.render("Recorde: {}".format(self.highscore), True, DARK_BROWN)
+        screen.blit(highscore_text, (cell_size * number_of_cells - 130, 5))
 
     def update(self):
         if not self.game_over and self.game_started and not self.game_paused:
@@ -175,11 +195,25 @@ class Game:
             self.cobra.add_segment = True
             self.cobra.score += 1
             self.cobra.increase_snake_speed()
-           
+
+    def save_highscore(self):
+        with open("recorde.txt", "w") as file:
+            file.write(str(self.highscore))
+
+    def load_highscore(self):
+        if os.path.exists("recorde.txt"):
+            with open("recorde.txt", "r") as file:
+                highscore = file.read()
+                if highscore:
+                    return int(highscore)
+        return 0
+
 screen = pygame.display.set_mode((cell_size * number_of_cells, cell_size * number_of_cells))
 pygame.display.set_caption("Retro Snake")
 clock = pygame.time.Clock()
 game = Game()
+
+
 comida_surface = pygame.image.load("apple.png")
 inicio_surface = pygame.image.load("vectors.png")
 pause_surface = pygame.image.load("p.png")
@@ -230,9 +264,6 @@ while True:
     pygame.draw.rect(screen, DARK_BROWN, border_rect, 5, border_radius=10)
 
     game.draw()
-
-    score_text = orbitron_font.render("Pts.: {}".format(game.cobra.score), True, DARK_BROWN)
-    screen.blit(score_text, (10, 5))
 
     pygame.display.update()
     clock.tick(60)

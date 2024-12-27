@@ -173,10 +173,10 @@ class Game:
             screen.blit(pause_text2, pause_rect2)
 
             scaled_pause_surface = pygame.transform.scale(pause_surface, (cell_size * 4, cell_size * 4))
-            screen.blit(scaled_pause_surface, (290, 230))
+            screen.blit(scaled_pause_surface, (350, 230))
             
             scaled_reset_surface = pygame.transform.scale(reset_surface, (cell_size * 4, cell_size * 4))
-            screen.blit(scaled_reset_surface, (290, 320))
+            screen.blit(scaled_reset_surface, (350, 320))
 
         score_text = orbitron_font.render("Pts.: {}".format(self.cobra.score), True, DARK_BROWN)
         screen.blit(score_text, (10, 5))
